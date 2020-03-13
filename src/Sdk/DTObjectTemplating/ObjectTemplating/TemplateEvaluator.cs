@@ -47,7 +47,20 @@ namespace GitHub.DistributedTask.ObjectTemplating
             var evaluator = new TemplateEvaluator(context, template, removeBytes);
             try
             {
-                var availableContext = new HashSet<String>(context.ExpressionValues.Keys.Concat(context.ExpressionFunctions.Select(x => $"{x.Name}({x.MinParameters},{x.MaxParameters})")));
+                var availableContext = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+                foreach (var key in context.ExpressionValues.Keys)
+                {
+                    availableContext.Add(key);
+                }
+                foreach (var function in context.ExpressionFunctions)
+                {
+                    availableContext.Add($"{function.Name}({function.MinParameters},{function.MaxParameters})");
+                    if (function.MaxParameters == Int32.MaxValue)
+                    {
+                        availableContext.Add($"{function.Name}({function.MinParameters},MAX)");
+                    }
+                }
+
                 var definitionInfo = new DefinitionInfo(context.Schema, type, availableContext);
                 result = evaluator.Evaluate(definitionInfo);
 
